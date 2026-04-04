@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Real Estate Chatbot Demo</title>
+  <title>Real Estate Assistant</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -164,8 +164,8 @@
 <body>
 
   <div class="hero">
-    <h1>Real Estate Chatbot Demo</h1>
-    <p>Click the chat bubble below</p>
+    <h1>Welcome to Your Dream Home</h1>
+    <p>Whether you're buying or selling, we're here to help every step of the way.</p>
   </div>
 
   <!-- Chat Bubble -->
@@ -184,12 +184,11 @@
     <div class="chat-body">
       <div class="chat-message">
         Hi there! I'm here to help you with your real estate needs.<br><br>
-        <strong>Are you looking to buy, sell, or rent?</strong>
+        <strong>Are you looking to buy or sell?</strong>
       </div>
       <div class="chat-options" id="options">
         <button onclick="selectOption('buy')">🏠 Buy a property</button>
         <button onclick="selectOption('sell')">💰 Sell my property</button>
-        <button onclick="selectOption('rent')">🔑 Rent a property</button>
       </div>
       <div class="chat-reply" id="reply"></div>
     </div>
@@ -207,8 +206,7 @@
       const reply = document.getElementById('reply');
       const messages = {
         buy: "Great! Looking to buy? I can help you find your dream home. A licensed agent will follow up with you shortly to discuss budget, location, and must-haves.",
-        sell: "Ready to sell? Smart move! Our agents will provide a free home valuation and guide you through listing, staging, and closing — stress-free.",
-        rent: "Looking to rent? We have listings across the city. Tell us your preferred area and budget, and we'll match you with the best options available."
+        sell: "Ready to sell? Smart move! Our agents will provide a free home valuation and guide you through listing, staging, and closing — stress-free."
       };
       reply.textContent = messages[choice];
       reply.style.display = 'block';
