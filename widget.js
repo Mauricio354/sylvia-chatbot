@@ -80,7 +80,7 @@
     '.re-chat-header-info p{font-size:11px;opacity:.7;margin:0}' +
     '.re-chat-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;opacity:.7;transition:opacity .2s}' +
     '.re-chat-close:hover{opacity:1}' +
-    '.re-chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:300px;max-height:420px;scroll-behavior:smooth}' +
+    '.re-chat-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:300px;max-height:420px;scroll-behavior:smooth}' +
     '.re-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;animation:re-msg-in .25s ease;word-wrap:break-word}' +
     '@keyframes re-msg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}' +
     '.re-msg-bot{background:#f0f2f5;color:#1a1a1a;align-self:flex-start;border-bottom-left-radius:4px}' +
@@ -122,17 +122,16 @@
     '.re-new-chat:hover{opacity:1}' +
     '.re-new-chat svg{width:16px;height:16px}' +
     '.re-input-bar{display:flex;gap:6px;padding:10px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fff}' +
-    '.re-input-bar input{flex:1;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:22px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}' +
+    '.re-input-bar input{flex:1;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:22px;font-size:16px;font-family:inherit;outline:none;transition:border-color .2s}' +
     '.re-input-bar input:focus{border-color:' + PRIMARY + '}' +
     '.re-input-bar button{background:' + PRIMARY + ';color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}' +
     '.re-input-bar button:hover{filter:brightness(1.1)}' +
     '.re-input-bar button:disabled{opacity:.4;cursor:default}' +
     '.re-powered{text-align:center;padding:6px;font-size:10px;color:#bbb;flex-shrink:0}' +
-    '@media(max-width:480px){' +
-      '#re-chatbot-window.re-open{bottom:0;right:0;left:0;top:0;width:100%;max-height:none;border-radius:0;animation:none}' +
+    '@media(max-width:500px){' +
+      '#re-chatbot-window.re-open{top:10px;left:10px;right:10px;bottom:80px;width:auto;max-height:none;border-radius:16px;animation:none}' +
       '#re-chatbot-window .re-chat-body{max-height:none;flex:1;min-height:0}' +
       '#re-chatbot-toggle{bottom:16px;right:16px;width:56px;height:56px}' +
-      'body.re-chat-open{overflow:hidden !important;touch-action:none}' +
     '}';
   document.head.appendChild(style);
 
@@ -193,28 +192,24 @@
   }
 
   /* ── Mobile helpers ─────────────────────────────── */
-  var isMobile = function () { return window.innerWidth <= 480; };
-
-  function setMobileHeight() {
-    if (!isMobile() || !state.open) return;
-    win.style.height = window.innerHeight + 'px';
-  }
+  var isMobile = function () { return window.innerWidth <= 500; };
 
   function lockBodyScroll() {
     if (!isMobile()) return;
-    document.body.classList.add('re-chat-open');
-    setMobileHeight();
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = '-' + window.scrollY + 'px';
   }
 
   function unlockBodyScroll() {
-    document.body.classList.remove('re-chat-open');
-    win.style.height = '';
-  }
-
-  // Resize on keyboard open/close and orientation change
-  window.addEventListener('resize', setMobileHeight);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', setMobileHeight);
+    if (document.body.style.position !== 'fixed') return;
+    var scrollY = document.body.style.top;
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.top = '';
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
   }
 
   /* ── Event listeners ─────────────────────────────── */
