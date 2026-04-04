@@ -218,7 +218,6 @@
     win.classList.add('re-open');
     lockBodyScroll();
     if (state.messages.length === 0) startConversation();
-    chatInput.focus();
   }
 
   function closeChat() {
@@ -491,11 +490,10 @@
       msg.innerHTML = formatBotText(text);
       state.messages.push({ role: 'bot', text: text });
       body.appendChild(msg);
-      scrollToBottom();
+      scrollToUserMessage();
 
       state.awaitingAI = false;
       chatSendBtn.disabled = false;
-      chatInput.focus();
     })
     .catch(function () {
       var el = document.getElementById('re-ai-typing');
@@ -552,10 +550,12 @@
       msg.textContent = text;
       state.messages.push({ role: 'bot', text: text });
       body.appendChild(msg);
-      scrollToBottom();
+      if (lastUserMsg) { scrollToUserMessage(); } else { scrollToBottom(); }
       if (callback) callback();
     }, 500 + Math.random() * 400);
   }
+
+  var lastUserMsg = null;
 
   function addUserMessage(text) {
     var msg = document.createElement('div');
@@ -563,6 +563,7 @@
     msg.textContent = text;
     state.messages.push({ role: 'user', text: text });
     body.appendChild(msg);
+    lastUserMsg = msg;
     scrollToBottom();
   }
 
@@ -695,6 +696,16 @@
   /* ── Utilities ───────────────────────────────────── */
   function scrollToBottom() {
     setTimeout(function () { body.scrollTop = body.scrollHeight; }, 50);
+  }
+
+  function scrollToUserMessage() {
+    if (lastUserMsg) {
+      setTimeout(function () {
+        lastUserMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    } else {
+      scrollToBottom();
+    }
   }
 
   function resetChat() {
