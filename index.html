@@ -147,6 +147,14 @@ window.CHATBOT_CONFIG = {
     '.re-input-bar button{background:' + PRIMARY + ';color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}' +
     '.re-input-bar button:hover{filter:brightness(1.1)}' +
     '.re-input-bar button:disabled{opacity:.4;cursor:default}' +
+    '.re-quick-bar{display:flex;gap:6px;padding:8px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fafafa}' +
+    '.re-quick-bar button{flex:1;background:#fff;color:' + PRIMARY + ';border:1.5px solid ' + PRIMARY + ';border-radius:20px;padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease}' +
+    '.re-quick-bar button:hover{background:' + PRIMARY + ';color:#fff}' +
+    '.re-quick-bar.re-hidden{display:none}' +
+    '.re-header-actions{margin-left:auto;display:flex;gap:4px;align-items:center}' +
+    '.re-new-chat{background:none;border:none;color:#fff;cursor:pointer;padding:4px 6px;opacity:.7;transition:opacity .2s;display:flex;align-items:center;justify-content:center}' +
+    '.re-new-chat:hover{opacity:1}' +
+    '.re-new-chat svg{width:16px;height:16px}' +
     '.re-powered{text-align:center;padding:6px;font-size:10px;color:#bbb;flex-shrink:0}' +
     '.re-restart{background:none;border:none;color:#999;font-size:11px;cursor:pointer;text-decoration:underline;margin-top:4px;font-family:inherit}' +
     '.re-restart:hover{color:#666}' +
@@ -175,9 +183,18 @@ window.CHATBOT_CONFIG = {
         '<h3>' + (brand.chatTitle || 'Chat with us') + '</h3>' +
         '<p>' + (agent.firstName || 'Agent') + (agent.title ? ' \u2014 ' + agent.title : '') + '</p>' +
       '</div>' +
-      '<button class="re-chat-close" aria-label="Close chat">&times;</button>' +
+      '<div class="re-header-actions">' +
+        '<button class="re-new-chat" id="re-new-chat" aria-label="New conversation" title="New conversation">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>' +
+        '</button>' +
+        '<button class="re-chat-close" aria-label="Close chat">&times;</button>' +
+      '</div>' +
     '</div>' +
     '<div class="re-chat-body" id="re-chat-body"></div>' +
+    '<div class="re-quick-bar" id="re-quick-bar">' +
+      '<button id="re-buy-btn">\ud83c\udfe0 I want to buy</button>' +
+      '<button id="re-sell-btn">\ud83d\udcb0 I want to sell</button>' +
+    '</div>' +
     '<div class="re-input-bar" id="re-input-bar">' +
       '<input type="text" id="re-chat-input" placeholder="Ask a question..." />' +
       '<button id="re-chat-send" aria-label="Send">' +
@@ -190,6 +207,15 @@ window.CHATBOT_CONFIG = {
   var body = document.getElementById('re-chat-body');
   var chatInput = document.getElementById('re-chat-input');
   var chatSendBtn = document.getElementById('re-chat-send');
+  var quickBar = document.getElementById('re-quick-bar');
+  var buyBtn = document.getElementById('re-buy-btn');
+  var sellBtn = document.getElementById('re-sell-btn');
+  var newChatBtn = document.getElementById('re-new-chat');
+
+  function setQuickBarVisible(visible) {
+    if (visible) { quickBar.classList.remove('re-hidden'); }
+    else { quickBar.classList.add('re-hidden'); }
+  }
 
   /* ── Event listeners ─────────────────────────────── */
   toggle.addEventListener('click', function () {
@@ -208,6 +234,10 @@ window.CHATBOT_CONFIG = {
     win.classList.remove('re-open');
   });
 
+  buyBtn.addEventListener('click', function () { handleTypeSelection('buyer'); });
+  sellBtn.addEventListener('click', function () { handleTypeSelection('seller'); });
+  newChatBtn.addEventListener('click', resetChat);
+
   // Text input send
   function handleSend() {
     var text = chatInput.value.trim();
@@ -225,34 +255,8 @@ window.CHATBOT_CONFIG = {
   /* ── Conversation flow ───────────────────────────── */
   function startConversation() {
     state.mode = 'chat';
-    showBotMessage(brand.welcomeMessage || "Hi! How can I help you today?", function () {
-      showQuickActions();
-    });
-  }
-
-  function showQuickActions() {
-    var container = document.createElement('div');
-    container.className = 're-options';
-    container.id = 're-quick-actions';
-
-    var actions = [
-      { label: "\ud83c\udfe0 I want to buy", value: 'buyer' },
-      { label: "\ud83d\udcb0 I want to sell", value: 'seller' }
-    ];
-
-    actions.forEach(function (a) {
-      var btn = document.createElement('button');
-      btn.className = 're-option-btn';
-      btn.textContent = a.label;
-      btn.addEventListener('click', function () {
-        container.remove();
-        handleTypeSelection(a.value);
-      });
-      container.appendChild(btn);
-    });
-
-    body.appendChild(container);
-    scrollToBottom();
+    setQuickBarVisible(true);
+    showBotMessage(brand.welcomeMessage || "Hi! How can I help you today?");
   }
 
   function handleTypeSelection(value) {
@@ -262,6 +266,7 @@ window.CHATBOT_CONFIG = {
     state.questionIndex = 0;
     state.answers = { type: value };
     state.mode = 'guided';
+    setQuickBarVisible(false);
 
     var resp = {
       buyer: "Great! I'd love to help you find the perfect property. Let me ask a few quick questions so " + (agent.firstName || 'the agent') + " can prepare the best options for you.",
@@ -420,7 +425,8 @@ window.CHATBOT_CONFIG = {
   /* ── Booking complete ────────────────────────────── */
   function handleBookingComplete() {
     addUserMessage("I've booked my consultation!");
-    state.mode = 'chat'; // back to chat mode
+    state.mode = 'chat';
+    setQuickBarVisible(true);
     if (sms.enabled && sms.backendUrl) sendSmsNotifications();
     setTimeout(function () {
       var tl = { buyer: 'property search', seller: 'listing consultation' };
@@ -446,12 +452,6 @@ window.CHATBOT_CONFIG = {
               '<br>Phone: ' + state.lead.phone +
               '<br>Email: ' + state.lead.email;
             body.appendChild(summary);
-
-            var restart = document.createElement('button');
-            restart.className = 're-restart';
-            restart.textContent = 'Start a new conversation';
-            restart.addEventListener('click', resetChat);
-            body.appendChild(restart);
             scrollToBottom();
           }, 600);
         }
@@ -705,6 +705,7 @@ window.CHATBOT_CONFIG = {
       messages: [], chatHistory: [], awaitingAI: false
     };
     body.innerHTML = '';
+    setQuickBarVisible(true);
     startConversation();
   }
 
