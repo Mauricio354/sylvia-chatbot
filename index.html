@@ -1,219 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Real Estate Chatbot Demo</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .hero {
-      text-align: center;
-      padding: 2rem;
-    }
-
-    .hero h1 {
-      font-size: 2rem;
-      color: #1a2e4a;
-      margin-bottom: 1rem;
-    }
-
-    .hero p {
-      font-size: 1.1rem;
-      color: #4a6080;
-    }
-
-    /* Chat Bubble */
-    #chat-bubble {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 60px;
-      height: 60px;
-      background: #1a3a6b;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 16px rgba(26,58,107,0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-      z-index: 1000;
-    }
-
-    #chat-bubble:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 22px rgba(26,58,107,0.5);
-    }
-
-    #chat-bubble svg {
-      width: 28px;
-      height: 28px;
-      fill: #fff;
-    }
-
-    /* Chat Window */
-    #chat-window {
-      position: fixed;
-      bottom: 100px;
-      right: 28px;
-      width: 320px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 999;
-      animation: slideUp 0.25s ease;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    #chat-window.open { display: flex; }
-
-    .chat-header {
-      background: #1a3a6b;
-      color: #fff;
-      padding: 14px 18px;
-      font-weight: 600;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .chat-header .dot {
-      width: 10px;
-      height: 10px;
-      background: #4ade80;
-      border-radius: 50%;
-    }
-
-    .chat-body {
-      padding: 18px;
-      flex: 1;
-    }
-
-    .chat-message {
-      background: #f0f4f8;
-      border-radius: 12px 12px 12px 2px;
-      padding: 12px 14px;
-      color: #1a2e4a;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 14px;
-    }
-
-    .chat-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .chat-options button {
-      background: #fff;
-      border: 2px solid #1a3a6b;
-      color: #1a3a6b;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      text-align: left;
-    }
-
-    .chat-options button:hover {
-      background: #1a3a6b;
-      color: #fff;
-    }
-
-    .chat-reply {
-      background: #1a3a6b;
-      color: #fff;
-      border-radius: 12px 12px 2px 12px;
-      padding: 12px 14px;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-top: 6px;
-      display: none;
-    }
-
-    .chat-footer {
-      padding: 10px 18px;
-      font-size: 0.75rem;
-      color: #aaa;
-      text-align: center;
-      border-top: 1px solid #f0f0f0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Estate Chatbot Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#333}
+.page{max-width:900px;margin:0 auto;padding:2rem 1.5rem;text-align:center}
+.page h1{font-size:2rem;color:#1a3a5c;margin-bottom:.5rem}
+.page p{color:#666;margin-bottom:1rem}
+.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:2rem;margin-top:2rem;text-align:left}
+.card h2{font-size:1.2rem;margin-bottom:1rem;color:#1a3a5c}
+.card p{font-size:.9rem;line-height:1.6;color:#555}
+.arrow{display:inline-block;animation:bounce 1s infinite;font-size:2rem;margin-top:1rem}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+</style>
 </head>
 <body>
-
-  <div class="hero">
-    <h1>Real Estate Chatbot Demo</h1>
-    <p>Click the chat bubble below</p>
-  </div>
-
-  <!-- Chat Bubble -->
-  <div id="chat-bubble" onclick="toggleChat()">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 10H6v-2h12v2zm0-4H6V6h12v2z"/>
-    </svg>
-  </div>
-
-  <!-- Chat Window -->
-  <div id="chat-window">
-    <div class="chat-header">
-      <div class="dot"></div>
-      Real Estate Assistant
-    </div>
-    <div class="chat-body">
-      <div class="chat-message">
-        Hi there! I'm here to help you with your real estate needs.<br><br>
-        <strong>Are you looking to buy, sell, or rent?</strong>
-      </div>
-      <div class="chat-options" id="options">
-        <button onclick="selectOption('buy')">🏠 Buy a property</button>
-        <button onclick="selectOption('sell')">💰 Sell my property</button>
-        <button onclick="selectOption('rent')">🔑 Rent a property</button>
-      </div>
-      <div class="chat-reply" id="reply"></div>
-    </div>
-    <div class="chat-footer">Powered by MR Web Solutions</div>
-  </div>
-
-  <script>
-    function toggleChat() {
-      const win = document.getElementById('chat-window');
-      win.classList.toggle('open');
-    }
-
-    function selectOption(choice) {
-      document.getElementById('options').style.display = 'none';
-      const reply = document.getElementById('reply');
-      const messages = {
-        buy: "Great! Looking to buy? I can help you find your dream home. A licensed agent will follow up with you shortly to discuss budget, location, and must-haves.",
-        sell: "Ready to sell? Smart move! Our agents will provide a free home valuation and guide you through listing, staging, and closing — stress-free.",
-        rent: "Looking to rent? We have listings across the city. Tell us your preferred area and budget, and we'll match you with the best options available."
-      };
-      reply.textContent = messages[choice];
-      reply.style.display = 'block';
-    }
-  </script>
-
+<div class="page">
+<h1>Sarah Johnson | RE/MAX First</h1>
+<p>Calgary Real Estate — Demo Site</p>
+<div class="card">
+<h2>Click the chat bubble in the bottom-right corner</h2>
+<p>The AI chatbot will qualify you as a buyer, seller, or renter, ask a few questions about your needs, collect your contact info, and then let you book a consultation.</p>
+<div class="arrow">&#8600;</div>
+</div>
+</div>
+<script>
+window.CHATBOT_CONFIG={agent:{name:"Sarah Johnson",firstName:"Sarah",title:"Licensed REALTOR\u00AE",brokerage:"RE/MAX First",photo:"",phone:"+14035551234",email:"sarah@example.com"},branding:{primaryColor:"#1a3a5c",accentColor:"#e8a87c",chatTitle:"Find Your Dream Home",welcomeMessage:"Hi there! \ud83d\udc4b I'm Sarah's virtual assistant. I can help you get started with your real estate needs. Are you looking to buy, sell, or rent?",widgetIcon:"home"},questions:{buyer:[{id:"budget",text:"What's your budget range?",options:["Under $300K","$300K\u2013$500K","$500K\u2013$750K","$750K\u2013$1M","Over $1M"]},{id:"area",text:"What area of Calgary are you interested in?",options:["Downtown/Beltline","Kensington/Hillhurst","Mount Royal/Elbow Park","Suburbs (Airdrie/Cochrane)","Not sure yet"],allowCustom:true},{id:"timeline",text:"When are you looking to move?",options:["ASAP","1\u20133 months","3\u20136 months","6+ months","Just browsing"]}],seller:[{id:"property_type",text:"What type of property are you selling?",options:["Single Family Home","Condo/Townhouse","Multi-Family","Land/Lot","Commercial"]},{id:"timeline",text:"When are you looking to sell?",options:["ASAP","1\u20133 months","3\u20136 months","6+ months","Just getting an estimate"]}],renter:[{id:"budget",text:"What's your monthly budget?",options:["Under $1,500","$1,500\u2013$2,000","$2,000\u2013$2,500","$2,500\u2013$3,500","Over $3,500"]},{id:"area",text:"What area are you looking in?",options:["Downtown/Beltline","NW Calgary","SW Calgary","Near C-Train","Not sure yet"],allowCustom:true},{id:"timeline",text:"When do you need to move in?",options:["ASAP","1\u20132 months","3+ months","Just browsing"]}]},calendar:{provider:"calendly",calendlyUrl:"https://calendly.com/sarah-johnson/30min",calcomUrl:"",googleCalendarId:""},sms:{enabled:false,backendUrl:""},leadCapture:{fields:["name","phone","email"],requirePhone:true,requireEmail:true}};
+</script>
+<script>
+(function(){'use strict';var C=window.CHATBOT_CONFIG||{};var agent=C.agent||{};var brand=C.branding||{};var questions=C.questions||{};var calendar=C.calendar||{};var sms=C.sms||{};var leadCapture=C.leadCapture||{};var PRIMARY=brand.primaryColor||'#1a3a5c';var ACCENT=brand.accentColor||'#e8a87c';var state={open:false,step:'welcome',userType:'',answers:{},questionIndex:0,lead:{name:'',phone:'',email:''},messages:[]};var style=document.createElement('style');style.textContent='#re-chatbot-toggle{position:fixed;bottom:24px;right:24px;width:64px;height:64px;border-radius:50%;background:'+PRIMARY+';color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:99999;display:flex;align-items:center;justify-content:center;transition:transform .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}#re-chatbot-toggle:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,0,0,.25)}#re-chatbot-toggle svg{width:28px;height:28px}#re-chatbot-window{position:fixed;bottom:100px;right:24px;width:380px;max-height:580px;border-radius:16px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.15);z-index:99999;display:none;flex-direction:column;background:#fff;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;animation:re-chat-slide-up .3s ease}#re-chatbot-window.re-open{display:flex}@keyframes re-chat-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}.re-chat-header{background:'+PRIMARY+';color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}.re-chat-avatar{width:42px;height:42px;border-radius:50%;background:'+ACCENT+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:'+PRIMARY+';flex-shrink:0;overflow:hidden}.re-chat-avatar img{width:100%;height:100%;object-fit:cover}.re-chat-header-info h3{font-size:14px;font-weight:700;margin:0}.re-chat-header-info p{font-size:11px;opacity:.7;margin:0}.re-chat-close{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;opacity:.7;transition:opacity .2s}.re-chat-close:hover{opacity:1}.re-chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:300px;max-height:400px;scroll-behavior:smooth}.re-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;animation:re-msg-in .25s ease}@keyframes re-msg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.re-msg-bot{background:#f0f2f5;color:#1a1a1a;align-self:flex-start;border-bottom-left-radius:4px}.re-msg-user{background:'+PRIMARY+';color:#fff;align-self:flex-end;border-bottom-right-radius:4px}.re-msg-typing{background:#f0f2f5;align-self:flex-start;border-bottom-left-radius:4px;padding:12px 18px}.re-msg-typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#999;margin:0 2px;animation:re-bounce .6s infinite}.re-msg-typing span:nth-child(2){animation-delay:.15s}.re-msg-typing span:nth-child(3){animation-delay:.3s}@keyframes re-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}.re-options{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;align-self:flex-start;max-width:90%}.re-option-btn{background:#fff;color:'+PRIMARY+';border:1.5px solid '+PRIMARY+';border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s ease;font-family:inherit;-webkit-tap-highlight-color:transparent}.re-option-btn:hover{background:'+PRIMARY+';color:#fff}.re-option-btn:active{transform:scale(.96)}.re-custom-input{display:flex;gap:6px;align-self:flex-start;max-width:90%;padding:4px 0}.re-custom-input input{flex:1;padding:8px 12px;border:1.5px solid #ddd;border-radius:20px;font-size:12.5px;font-family:inherit;outline:none;transition:border-color .2s}.re-custom-input input:focus{border-color:'+PRIMARY+'}.re-custom-input button{background:'+PRIMARY+';color:#fff;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.re-form{display:flex;flex-direction:column;gap:10px;padding:8px 0;align-self:stretch}.re-form label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:-4px}.re-form input{padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}.re-form input:focus{border-color:'+PRIMARY+'}.re-form-submit{background:'+PRIMARY+';color:#fff;border:none;border-radius:24px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}.re-form-submit:hover{filter:brightness(1.1);transform:translateY(-1px)}.re-calendar-embed{width:100%;min-height:200px;display:flex;flex-direction:column;gap:8px;padding:4px 0}.re-calendar-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:'+PRIMARY+';color:#fff;border:none;border-radius:24px;padding:12px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .2s}.re-calendar-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}.re-calendar-btn svg{width:18px;height:18px}.re-powered{text-align:center;padding:8px;font-size:10px;color:#bbb;border-top:1px solid #f0f0f0;flex-shrink:0}.re-restart{background:none;border:none;color:#999;font-size:11px;cursor:pointer;text-decoration:underline;margin-top:4px;font-family:inherit}.re-restart:hover{color:#666}@media(max-width:480px){#re-chatbot-window{bottom:0;right:0;left:0;width:100%;max-height:100vh;border-radius:16px 16px 0 0}#re-chatbot-toggle{bottom:16px;right:16px;width:56px;height:56px}}';document.head.appendChild(style);var toggle=document.createElement('button');toggle.id='re-chatbot-toggle';toggle.setAttribute('aria-label','Open chat');toggle.innerHTML=getToggleIcon();document.body.appendChild(toggle);var win=document.createElement('div');win.id='re-chatbot-window';var initials=(agent.firstName||'A').charAt(0);var avatarContent=agent.photo?'<img src="'+agent.photo+'" alt="'+agent.firstName+'">':initials;win.innerHTML='<div class="re-chat-header"><div class="re-chat-avatar">'+avatarContent+'</div><div class="re-chat-header-info"><h3>'+(brand.chatTitle||'Chat with us')+'</h3><p>'+(agent.firstName||'Agent')+' '+(agent.title?'\u2014 '+agent.title:'')+'</p></div><button class="re-chat-close" aria-label="Close chat">&times;</button></div><div class="re-chat-body" id="re-chat-body"></div><div class="re-powered">Powered by MR Web Solutions</div>';document.body.appendChild(win);var body=document.getElementById('re-chat-body');toggle.addEventListener('click',function(){state.open=!state.open;if(state.open){win.classList.add('re-open');if(state.messages.length===0)startConversation();}else{win.classList.remove('re-open');}});win.querySelector('.re-chat-close').addEventListener('click',function(){state.open=false;win.classList.remove('re-open');});function startConversation(){state.step='qualify_type';addBotMessage(brand.welcomeMessage||"Hi! Are you looking to buy, sell, or rent?");setTimeout(function(){addOptions([{label:"I'm looking to buy",value:'buyer'},{label:"I want to sell",value:'seller'},{label:"I'm looking to rent",value:'renter'}],handleTypeSelection);},600);}function handleTypeSelection(value){var labels={buyer:"I'm looking to buy",seller:"I want to sell",renter:"I'm looking to rent"};addUserMessage(labels[value]||value);state.userType=value;state.questionIndex=0;state.answers={type:value};state.step='qualify_questions';var resp={buyer:"Great! I'd love to help you find the perfect property. Let me ask a few quick questions so "+(agent.firstName||'the agent')+" can prepare the best options for you.",seller:"Wonderful! Let's get some details so "+(agent.firstName||'the agent')+" can give you an accurate market assessment.",renter:"Perfect! Let me gather a few details to help find the right rental for you."};setTimeout(function(){addBotMessage(resp[value]);setTimeout(function(){askNextQuestion();},600);},500);}function askNextQuestion(){var qs=questions[state.userType]||[];if(state.questionIndex>=qs.length){state.step='lead_capture';setTimeout(function(){addBotMessage("Thanks for those details! To connect you with "+(agent.firstName||'our agent')+", I'll just need your contact info.");setTimeout(function(){showLeadForm();},500);},400);return;}var q=qs[state.questionIndex];addBotMessage(q.text);setTimeout(function(){addOptions(q.options.map(function(o){return{label:o,value:o};}),function(val){handleQuestionAnswer(q.id,val);},q.allowCustom);},500);}function handleQuestionAnswer(id,value){addUserMessage(value);state.answers[id]=value;state.questionIndex++;setTimeout(function(){askNextQuestion();},400);}function showLeadForm(){var form=document.createElement('div');form.className='re-form';var fields=leadCapture.fields||['name','phone','email'];var fl={name:'Your name',phone:'Phone number',email:'Email address'};var ft={name:'text',phone:'tel',email:'email'};var fp={name:'John Smith',phone:'(403) 555-1234',email:'john@example.com'};fields.forEach(function(f){var label=document.createElement('label');label.textContent=fl[f]||f;form.appendChild(label);var input=document.createElement('input');input.type=ft[f]||'text';input.placeholder=fp[f]||'';input.id='re-field-'+f;input.required=true;form.appendChild(input);});var btn=document.createElement('button');btn.className='re-form-submit';btn.textContent='Continue to Book a Consultation';btn.addEventListener('click',function(){var valid=true;fields.forEach(function(f){var input=document.getElementById('re-field-'+f);if(!input.value.trim()){valid=false;input.style.borderColor='#e74c3c';}else{input.style.borderColor='#ddd';state.lead[f]=input.value.trim();}});if(!valid)return;form.remove();addUserMessage(state.lead.name+' | '+state.lead.phone+' | '+state.lead.email);state.step='booking';setTimeout(function(){var tl={buyer:'buying',seller:'selling',renter:'renting'};addBotMessage("Perfect, "+state.lead.name.split(' ')[0]+"! Based on your "+(tl[state.userType]||'')+" needs, I'd recommend booking a consultation with "+(agent.firstName||'our agent')+". Pick a time that works for you:");setTimeout(function(){showCalendarBooking();},500);},400);});form.appendChild(btn);body.appendChild(form);scrollToBottom();}function showCalendarBooking(){var container=document.createElement('div');container.className='re-calendar-embed';var provider=calendar.provider||'calendly';var bookingUrl='';var providerName='';if(provider==='calendly'&&calendar.calendlyUrl){bookingUrl=calendar.calendlyUrl;providerName='Calendly';}else if(provider==='calcom'&&calendar.calcomUrl){bookingUrl=calendar.calcomUrl;providerName='Cal.com';}else if(provider==='google'&&calendar.googleCalendarId){bookingUrl='https://calendar.google.com/calendar/appointments/schedules/'+calendar.googleCalendarId;providerName='Google Calendar';}if(bookingUrl){var sep=bookingUrl.indexOf('?')>-1?'&':'?';if(provider==='calendly'||provider==='calcom'){bookingUrl+=sep+'name='+encodeURIComponent(state.lead.name)+'&email='+encodeURIComponent(state.lead.email);}var btn=document.createElement('a');btn.href=bookingUrl;btn.target='_blank';btn.rel='noopener';btn.className='re-calendar-btn';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book via '+providerName;container.appendChild(btn);if(agent.phone){var callBtn=document.createElement('a');callBtn.href='tel:'+agent.phone;callBtn.className='re-calendar-btn';callBtn.style.background=ACCENT;callBtn.style.color=PRIMARY;callBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Or call '+(agent.firstName||'us')+' directly';container.appendChild(callBtn);}}else{var msg=document.createElement('div');msg.className='re-msg re-msg-bot';msg.textContent='Please call '+(agent.firstName||'our agent')+' at '+(agent.phone||'our office')+' or email '+(agent.email||'us')+' to schedule.';container.appendChild(msg);}var doneBtn=document.createElement('button');doneBtn.className='re-form-submit';doneBtn.style.marginTop='6px';doneBtn.style.fontSize='12px';doneBtn.style.background='#f0f2f5';doneBtn.style.color='#333';doneBtn.textContent="I've booked my consultation";doneBtn.addEventListener('click',function(){container.remove();handleBookingComplete();});container.appendChild(doneBtn);body.appendChild(container);scrollToBottom();}function handleBookingComplete(){addUserMessage("I've booked my consultation!");state.step='complete';if(sms.enabled&&sms.backendUrl){sendSmsNotifications();}setTimeout(function(){var tl={buyer:'property search',seller:'listing consultation',renter:'rental search'};addBotMessage("You're all set, "+state.lead.name.split(' ')[0]+"! "+(agent.firstName||'Our agent')+" is looking forward to helping with your "+(tl[state.userType]||'real estate needs')+". You'll receive a confirmation shortly. See you soon!");setTimeout(function(){var summary=document.createElement('div');summary.className='re-msg re-msg-bot';summary.style.background='#f8f9fa';summary.style.border='1px solid #e8e8e8';summary.style.fontSize='12px';summary.innerHTML='<strong>Consultation Summary</strong><br>Client: '+state.lead.name+'<br>Type: '+state.userType.charAt(0).toUpperCase()+state.userType.slice(1)+'<br>'+Object.keys(state.answers).filter(function(k){return k!=='type';}).map(function(k){return k.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})+': '+state.answers[k];}).join('<br>')+'<br>Phone: '+state.lead.phone+'<br>Email: '+state.lead.email;body.appendChild(summary);var restart=document.createElement('button');restart.className='re-restart';restart.textContent='Start a new conversation';restart.addEventListener('click',resetChat);body.appendChild(restart);scrollToBottom();},800);},500);}function sendSmsNotifications(){var tl={buyer:'Buyer',seller:'Seller',renter:'Renter'};var details=Object.keys(state.answers).filter(function(k){return k!=='type';}).map(function(k){return k.replace(/_/g,' ')+': '+state.answers[k];}).join(', ');sendSms(agent.phone,'New '+tl[state.userType]+' lead! '+state.lead.name+' ('+state.lead.phone+'). '+details+'. Consultation booked.');if(state.lead.phone){sendSms(state.lead.phone,'Hi '+state.lead.name.split(' ')[0]+'! Your consultation with '+agent.name+' ('+agent.brokerage+') is confirmed. - '+agent.firstName);}}function sendSms(to,message){try{var x=new XMLHttpRequest();x.open('POST',sms.backendUrl,true);x.setRequestHeader('Content-Type','application/json');x.send(JSON.stringify({to:to,message:message}));}catch(e){}}function addBotMessage(text){var typing=document.createElement('div');typing.className='re-msg re-msg-typing';typing.innerHTML='<span></span><span></span><span></span>';body.appendChild(typing);scrollToBottom();setTimeout(function(){typing.remove();var msg=document.createElement('div');msg.className='re-msg re-msg-bot';msg.textContent=text;state.messages.push({role:'bot',text:text});body.appendChild(msg);scrollToBottom();},500+Math.random()*400);}function addUserMessage(text){var msg=document.createElement('div');msg.className='re-msg re-msg-user';msg.textContent=text;state.messages.push({role:'user',text:text});body.appendChild(msg);scrollToBottom();}function addOptions(options,callback,allowCustom){var container=document.createElement('div');container.className='re-options';var customContainer=null;options.forEach(function(opt){var btn=document.createElement('button');btn.className='re-option-btn';btn.textContent=opt.label;btn.addEventListener('click',function(){container.remove();if(customContainer)customContainer.remove();callback(opt.value);});container.appendChild(btn);});body.appendChild(container);if(allowCustom){customContainer=document.createElement('div');customContainer.className='re-custom-input';var input=document.createElement('input');input.type='text';input.placeholder='Or type your own...';var sendBtn=document.createElement('button');sendBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';var submitCustom=function(){if(input.value.trim()){container.remove();customContainer.remove();callback(input.value.trim());}};sendBtn.addEventListener('click',submitCustom);input.addEventListener('keydown',function(e){if(e.key==='Enter')submitCustom();});customContainer.appendChild(input);customContainer.appendChild(sendBtn);body.appendChild(customContainer);}scrollToBottom();}function scrollToBottom(){setTimeout(function(){body.scrollTop=body.scrollHeight;},50);}function resetChat(){state={open:true,step:'welcome',userType:'',answers:{},questionIndex:0,lead:{name:'',phone:'',email:''},messages:[]};body.innerHTML='';startConversation();}function getToggleIcon(){var i=brand.widgetIcon||'home';if(i==='chat')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';if(i==='agent')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';}})();
+</script>
 </body>
 </html>
