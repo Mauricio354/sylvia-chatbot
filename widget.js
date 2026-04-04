@@ -128,7 +128,12 @@
     '.re-input-bar button:hover{filter:brightness(1.1)}' +
     '.re-input-bar button:disabled{opacity:.4;cursor:default}' +
     '.re-powered{text-align:center;padding:6px;font-size:10px;color:#bbb;flex-shrink:0}' +
-    '@media(max-width:480px){#re-chatbot-window{bottom:0;right:0;left:0;width:100%;max-height:100vh;border-radius:16px 16px 0 0}#re-chatbot-toggle{bottom:16px;right:16px;width:56px;height:56px}}';
+    '@media(max-width:480px){' +
+      '#re-chatbot-window{bottom:0;right:0;left:0;top:0;width:100%;max-height:none;height:100%;border-radius:0;animation:none}' +
+      '#re-chatbot-window .re-chat-body{max-height:none;flex:1;min-height:0}' +
+      '#re-chatbot-toggle{bottom:16px;right:16px;width:56px;height:56px}' +
+      'body.re-chat-open{overflow:hidden;position:fixed;width:100%;height:100%}' +
+    '}';
   document.head.appendChild(style);
 
   /* ── Toggle button ───────────────────────────────── */
@@ -187,21 +192,47 @@
     else { quickBar.classList.add('re-hidden'); }
   }
 
+  /* ── Mobile helpers ─────────────────────────────── */
+  var isMobile = function () { return window.innerWidth <= 480; };
+  var savedScrollY = 0;
+
+  function lockBodyScroll() {
+    if (!isMobile()) return;
+    savedScrollY = window.scrollY;
+    document.body.classList.add('re-chat-open');
+    document.body.style.top = '-' + savedScrollY + 'px';
+  }
+
+  function unlockBodyScroll() {
+    if (!document.body.classList.contains('re-chat-open')) return;
+    document.body.classList.remove('re-chat-open');
+    document.body.style.top = '';
+    window.scrollTo(0, savedScrollY);
+  }
+
+  // Prevent chat body touch scroll from leaking to background
+  win.addEventListener('touchmove', function (e) {
+    e.stopPropagation();
+  }, { passive: true });
+
   /* ── Event listeners ─────────────────────────────── */
   toggle.addEventListener('click', function () {
     state.open = !state.open;
     if (state.open) {
       win.classList.add('re-open');
+      lockBodyScroll();
       if (state.messages.length === 0) startConversation();
       chatInput.focus();
     } else {
       win.classList.remove('re-open');
+      unlockBodyScroll();
     }
   });
 
   win.querySelector('.re-chat-close').addEventListener('click', function () {
     state.open = false;
     win.classList.remove('re-open');
+    unlockBodyScroll();
   });
 
   buyBtn.addEventListener('click', function () { handleTypeSelection('buyer'); });
