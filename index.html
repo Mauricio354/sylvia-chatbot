@@ -69,6 +69,31 @@ window.CHATBOT_CONFIG = {
 <script>
 (function () {
   'use strict';
+
+  /* ── Load Cal.com embed script ───────────────────── */
+  (function (W, A, L) {
+    var p = function (a, ar) { a.q.push(ar); };
+    var d = W.document;
+    W.Cal = W.Cal || function () {
+      var cal = W.Cal;
+      var ar = arguments;
+      if (!cal.loaded) {
+        cal.ns = {}; cal.q = cal.q || [];
+        var s = d.createElement('script'); s.src = A; d.head.appendChild(s);
+        cal.loaded = true;
+      }
+      if (ar[0] === L) {
+        var api = function () { p(api, arguments); };
+        var ns = ar[1]; api.q = api.q || [];
+        if (typeof ns === 'string') { cal.ns[ns] = cal.ns[ns] || api; p(cal.ns[ns], ar); p(cal, ['initNamespace', ns]); }
+        else p(cal, ar);
+        return;
+      }
+      p(cal, ar);
+    };
+  })(window, 'https://app.cal.com/embed/embed.js', 'init');
+  Cal('init', { origin: 'https://cal.com' });
+
   var C = window.CHATBOT_CONFIG || {};
   var agent = C.agent || {};
   var brand = C.branding || {};
@@ -363,34 +388,19 @@ window.CHATBOT_CONFIG = {
   }
 
   /* ── Calendar booking ────────────────────────────── */
+  var bookingListenerSet = false;
+
   function showCalendarBooking() {
     var container = document.createElement('div');
     container.className = 're-calendar-embed';
+    container.id = 're-booking-container';
 
-    var provider = calendar.provider || 'calendly';
-    var bookingUrl = '';
-    var providerName = '';
+    var calcomUrl = calendar.calcomUrl || '';
+    // Extract calLink path from full URL (e.g. "mauricio-rosas-2wvlr4/30-min-consultation")
+    var calLink = calcomUrl.replace(/^https?:\/\/cal\.com\//, '');
 
-    if (provider === 'calendly' && calendar.calendlyUrl) {
-      bookingUrl = calendar.calendlyUrl;
-      providerName = 'Calendly';
-    } else if (provider === 'calcom' && calendar.calcomUrl) {
-      bookingUrl = calendar.calcomUrl;
-      providerName = 'Cal.com';
-    } else if (provider === 'google' && calendar.googleCalendarId) {
-      bookingUrl = 'https://calendar.google.com/calendar/appointments/schedules/' + calendar.googleCalendarId;
-      providerName = 'Google Calendar';
-    }
-
-    if (bookingUrl) {
-      var sep = bookingUrl.indexOf('?') > -1 ? '&' : '?';
-      if (provider === 'calendly' || provider === 'calcom') {
-        bookingUrl += sep + 'name=' + encodeURIComponent(state.lead.name) + '&email=' + encodeURIComponent(state.lead.email);
-      }
-      var btn = document.createElement('a');
-      btn.href = bookingUrl;
-      btn.target = '_blank';
-      btn.rel = 'noopener';
+    if (calLink) {
+      var btn = document.createElement('button');
       btn.className = 're-calendar-btn';
       btn.innerHTML =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
@@ -398,26 +408,37 @@ window.CHATBOT_CONFIG = {
           '<line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>' +
           '<line x1="3" y1="10" x2="21" y2="10"/>' +
         '</svg> Book Your Consultation';
+      btn.addEventListener('click', function () {
+        Cal('modal', {
+          calLink: calLink,
+          config: {
+            name: state.lead.name || '',
+            email: state.lead.email || '',
+            layout: 'month_view'
+          }
+        });
+      });
       container.appendChild(btn);
+
+      // Set up the booking success listener (once)
+      if (!bookingListenerSet) {
+        bookingListenerSet = true;
+        Cal('on', {
+          action: 'bookingSuccessful',
+          callback: function () {
+            var el = document.getElementById('re-booking-container');
+            if (el) el.remove();
+            handleBookingComplete();
+          }
+        });
+      }
     } else {
       var msg = document.createElement('div');
       msg.className = 're-msg re-msg-bot';
-      msg.textContent = 'Please call ' + (agent.firstName || 'our agent') + ' at ' + (agent.phone || 'our office') + ' or email ' + (agent.email || 'us') + ' to schedule.';
+      msg.textContent = 'Please email ' + (agent.email || 'us') + ' to schedule your consultation.';
       container.appendChild(msg);
     }
 
-    var doneBtn = document.createElement('button');
-    doneBtn.className = 're-form-submit';
-    doneBtn.style.marginTop = '6px';
-    doneBtn.style.fontSize = '12px';
-    doneBtn.style.background = '#f0f2f5';
-    doneBtn.style.color = '#333';
-    doneBtn.textContent = "I've booked my consultation";
-    doneBtn.addEventListener('click', function () {
-      container.remove();
-      handleBookingComplete();
-    });
-    container.appendChild(doneBtn);
     body.appendChild(container);
     scrollToBottom();
   }
@@ -473,10 +494,20 @@ window.CHATBOT_CONFIG = {
     body.appendChild(typing);
     scrollToBottom();
 
+    // Build context so the AI knows where the user is in the process
+    var ctx = {};
+    if (state.userType) ctx.userType = state.userType;
+    if (state.lead.name) ctx.leadName = state.lead.name;
+    if (state.mode === 'chat' && state.lead.name && Object.keys(state.answers).length > 1) {
+      ctx.bookingComplete = true;
+      ctx.answersText = Object.keys(state.answers).filter(function (k) { return k !== 'type'; })
+        .map(function (k) { return k.replace(/_/g, ' ') + ': ' + state.answers[k]; }).join(', ');
+    }
+
     fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: state.chatHistory })
+      body: JSON.stringify({ messages: state.chatHistory, context: ctx })
     })
     .then(function (res) { return res.json(); })
     .then(function (data) {

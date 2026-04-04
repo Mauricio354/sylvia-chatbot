@@ -55,10 +55,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages } = req.body;
+    const { messages, context } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Messages array is required" });
+    }
+
+    // Build dynamic context about where the user is in the process
+    let dynamicContext = "";
+    if (context) {
+      if (context.bookingComplete) {
+        dynamicContext += `\n\n## Current session context\nThis client has ALREADY completed the guided qualification process and booked a consultation with Sylvia. Their details:\n- Name: ${context.leadName}\n- Type: ${context.userType}\n- Answers: ${context.answersText}\nDo NOT tell them to click "I want to buy" or "I want to sell" — they've already done that. Instead, reassure them that Sylvia will be in touch soon, and answer any other questions they have.`;
+      } else if (context.userType) {
+        dynamicContext += `\n\n## Current session context\nThis client is currently going through the ${context.userType} qualification process. They have already started the guided flow.`;
+      }
     }
 
     // Limit conversation history to last 20 messages to manage token usage
@@ -67,7 +77,7 @@ export default async function handler(req, res) {
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + dynamicContext,
       messages: recentMessages,
     });
 
