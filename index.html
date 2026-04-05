@@ -115,6 +115,7 @@ window.CHATBOT_CONFIG = {
     accentColor: "#e8a87c",
     chatTitle: "Distinctive Homes",
     welcomeMessage: "Hi there! \ud83d\udc4b I'm Sylvia's virtual assistant. I can answer questions about her services, or help you get started with buying or selling a home. How can I help you today?",
+    welcomeMessage_es: "\u00a1Hola! \ud83d\udc4b Soy la asistente virtual de Sylvia. Puedo responder preguntas sobre sus servicios o ayudarte a comenzar con la compra o venta de una casa. \u00bfC\u00f3mo puedo ayudarte hoy?",
     widgetIcon: "chat"
   },
   questions: {
@@ -126,6 +127,17 @@ window.CHATBOT_CONFIG = {
     seller: [
       { id: "property_type", text: "What type of property are you selling?", options: ["Single Family Home","Condo/Townhouse","Multi-Family","Land/Lot","Commercial"] },
       { id: "timeline", text: "When are you looking to sell?", options: ["ASAP","1\u20133 months","3\u20136 months","6+ months","Just getting an estimate"] }
+    ]
+  },
+  questions_es: {
+    buyer: [
+      { id: "budget", text: "\u00bfCu\u00e1l es tu rango de presupuesto?", options: ["Menos de $300K","$300K\u2013$500K","$500K\u2013$750K","$750K\u2013$1M","M\u00e1s de $1M"] },
+      { id: "area", text: "\u00bfQu\u00e9 \u00e1rea(s) de Calgary te interesan?", options: ["Arbour Lake/Royal Oak","Tuscany/Rocky Ridge","Evanston/Sage Hill","Kincora/Nolan Hill","Edgemont/Hamptons","A\u00fan no estoy seguro/a"], allowCustom: true, multiSelect: true },
+      { id: "timeline", text: "\u00bfCu\u00e1ndo est\u00e1s buscando mudarte?", options: ["Lo antes posible","1\u20133 meses","3\u20136 meses","6+ meses","Solo estoy mirando"] }
+    ],
+    seller: [
+      { id: "property_type", text: "\u00bfQu\u00e9 tipo de propiedad est\u00e1s vendiendo?", options: ["Casa unifamiliar","Condominio/Casa adosada","Multifamiliar","Terreno/Lote","Comercial"] },
+      { id: "timeline", text: "\u00bfCu\u00e1ndo est\u00e1s buscando vender?", options: ["Lo antes posible","1\u20133 meses","3\u20136 meses","6+ meses","Solo estoy obteniendo un estimado"] }
     ]
   },
   calendar: {

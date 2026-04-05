@@ -44,6 +44,7 @@
   var agent = C.agent || {};
   var brand = C.branding || {};
   var questions = C.questions || {};
+  var questions_es = C.questions_es || {};
   var calendar = C.calendar || {};
   var sms = C.sms || {};
   var leadCapture = C.leadCapture || {};
@@ -52,8 +53,109 @@
   // Allow config to override the API base URL
   if (C.apiUrl) API_BASE = C.apiUrl;
 
+  /* ── Translations ────────────────────────────────── */
+  var T = {
+    en: {
+      wantBuy: '\ud83c\udfe0 I want to buy',
+      wantSell: '\ud83d\udcb0 I want to sell',
+      askQuestion: 'Ask a question...',
+      selectUpTo2: 'Select up to 2 options',
+      continueBtn: 'Continue \u2192',
+      typeOwn: 'Or type your own...',
+      bookConsultation: 'Continue to Book a Consultation',
+      bookYourConsultation: 'Book Your Consultation',
+      bookedMsg: "I've booked my consultation!",
+      yourName: 'Your name',
+      phoneNumber: 'Phone number',
+      emailAddress: 'Email address',
+      namePlaceholder: 'John Smith',
+      phonePlaceholder: '(403) 555-1234',
+      emailPlaceholder: 'john@example.com',
+      consultSummary: 'Consultation Summary',
+      client: 'Client',
+      type: 'Type',
+      phone: 'Phone',
+      email: 'Email',
+      newChat: 'New Chat',
+      refresh: 'Refresh',
+      exit: 'Exit',
+      errorConnect: "I'm having trouble connecting right now. Please try again in a moment.",
+      errorGeneric: "I'm sorry, something went wrong. Please try again.",
+      buyerType: 'buying',
+      sellerType: 'selling',
+      propertySearch: 'property search',
+      listingConsult: 'listing consultation',
+      buyerLabel: 'Buyer',
+      sellerLabel: 'Seller'
+    },
+    es: {
+      wantBuy: '\ud83c\udfe0 Quiero comprar',
+      wantSell: '\ud83d\udcb0 Quiero vender',
+      askQuestion: 'Haz una pregunta...',
+      selectUpTo2: 'Selecciona hasta 2 opciones',
+      continueBtn: 'Continuar \u2192',
+      typeOwn: 'O escribe la tuya...',
+      bookConsultation: 'Continuar para reservar una consulta',
+      bookYourConsultation: 'Reserva tu consulta',
+      bookedMsg: '\u00a1He reservado mi consulta!',
+      yourName: 'Tu nombre',
+      phoneNumber: 'N\u00famero de tel\u00e9fono',
+      emailAddress: 'Correo electr\u00f3nico',
+      namePlaceholder: 'Juan P\u00e9rez',
+      phonePlaceholder: '(403) 555-1234',
+      emailPlaceholder: 'juan@ejemplo.com',
+      consultSummary: 'Resumen de la consulta',
+      client: 'Cliente',
+      type: 'Tipo',
+      phone: 'Tel\u00e9fono',
+      email: 'Correo',
+      newChat: 'Nuevo Chat',
+      refresh: 'Actualizar',
+      exit: 'Salir',
+      errorConnect: 'Estoy teniendo problemas para conectarme. Por favor, int\u00e9ntalo de nuevo en un momento.',
+      errorGeneric: 'Lo siento, algo sali\u00f3 mal. Por favor, int\u00e9ntalo de nuevo.',
+      buyerType: 'compra',
+      sellerType: 'venta',
+      propertySearch: 'b\u00fasqueda de propiedad',
+      listingConsult: 'consulta de venta',
+      buyerLabel: 'Comprador',
+      sellerLabel: 'Vendedor'
+    }
+  };
+
+  function t(key) { return T[state.lang][key] || T.en[key] || key; }
+
+  /* ── Guided-flow message builders (by language) ─── */
+  var MSG = {
+    en: {
+      buyerIntro: function (n) { return "Great! I'd love to help you find the perfect property. Let me ask a few quick questions so " + n + " can prepare the best options for you."; },
+      sellerIntro: function (n) { return "Wonderful! Let's get some details so " + n + " can give you an accurate market assessment."; },
+      contactInfo: function (n) { return "Thanks for those details! To connect you with " + n + ", I'll just need your contact info."; },
+      bookingMsg: function (lead, agnt, typ) { return "Perfect, " + lead + "! Based on your " + typ + " needs, I'd recommend booking a consultation with " + agnt + ". Pick a time that works for you:"; },
+      bookingDone: function (lead, agnt, typ) { return "You're all set, " + lead + "! " + agnt + " is looking forward to helping with your " + typ + ". You'll receive a confirmation shortly. Feel free to ask me anything else!"; },
+      emailFallback: function (em) { return 'Please email ' + em + ' to schedule your consultation.'; }
+    },
+    es: {
+      buyerIntro: function (n) { return "\u00a1Genial! Me encantar\u00eda ayudarte a encontrar la propiedad perfecta. D\u00e9jame hacerte unas preguntas r\u00e1pidas para que " + n + " pueda preparar las mejores opciones para ti."; },
+      sellerIntro: function (n) { return "\u00a1Maravilloso! Vamos a obtener algunos detalles para que " + n + " pueda darte una evaluaci\u00f3n precisa del mercado."; },
+      contactInfo: function (n) { return "\u00a1Gracias por esos detalles! Para conectarte con " + n + ", solo necesitar\u00e9 tu informaci\u00f3n de contacto."; },
+      bookingMsg: function (lead, agnt, typ) { return "\u00a1Perfecto, " + lead + "! Basado en tus necesidades de " + typ + ", te recomiendo reservar una consulta con " + agnt + ". Elige un horario que te convenga:"; },
+      bookingDone: function (lead, agnt, typ) { return "\u00a1Listo, " + lead + "! " + agnt + " espera con gusto ayudarte con tu " + typ + ". Recibir\u00e1s una confirmaci\u00f3n pronto. \u00a1No dudes en preguntarme cualquier otra cosa!"; },
+      emailFallback: function (em) { return 'Por favor env\u00eda un correo a ' + em + ' para programar tu consulta.'; }
+    }
+  };
+
+  function m(key) { return MSG[state.lang][key] || MSG.en[key]; }
+
+  function getQuestions() {
+    return state.lang === 'es' && questions_es[state.userType]
+      ? questions_es
+      : questions;
+  }
+
   var state = {
     open: false,
+    lang: 'en',
     mode: 'chat',
     userType: '',
     answers: {},
@@ -118,9 +220,23 @@
     '.re-quick-bar button:hover{background:' + PRIMARY + ';color:#fff}' +
     '.re-quick-bar.re-hidden{display:none}' +
     '.re-header-actions{margin-left:auto;display:flex;gap:4px;align-items:center}' +
-    '.re-new-chat{background:none;border:none;color:#fff;cursor:pointer;padding:4px 6px;opacity:.7;transition:opacity .2s;display:flex;align-items:center;justify-content:center}' +
-    '.re-new-chat:hover{opacity:1}' +
-    '.re-new-chat svg{width:16px;height:16px}' +
+    /* ── Language toggle buttons ── */
+    '.re-lang-btn{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.85);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}' +
+    '.re-lang-btn.re-active{background:#fff;color:' + PRIMARY + '}' +
+    '.re-lang-btn:hover{background:rgba(255,255,255,.3)}' +
+    '.re-lang-btn.re-active:hover{background:#fff}' +
+    /* ── Ellipsis menu ── */
+    '.re-menu-wrap{position:relative}' +
+    '.re-menu-toggle{background:none;border:none;color:#fff;cursor:pointer;padding:4px 6px;opacity:.7;transition:opacity .2s;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;letter-spacing:1px}' +
+    '.re-menu-toggle:hover{opacity:1}' +
+    '.re-menu-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:6px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:150px;z-index:10;overflow:hidden;animation:re-menu-fade .15s ease}' +
+    '.re-menu-dropdown.re-menu-open{display:block}' +
+    '@keyframes re-menu-fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}' +
+    '.re-menu-item{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;font-size:13px;font-family:inherit;color:#333;cursor:pointer;transition:background .12s}' +
+    '.re-menu-item:hover{background:#f5f5f5}' +
+    '.re-menu-item svg{width:15px;height:15px;opacity:.6}' +
+    '.re-menu-sep{height:1px;background:#eee;margin:0}' +
+    /* ── Existing continued ── */
     '.re-input-bar{display:flex;gap:6px;padding:10px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fff}' +
     '.re-input-bar input{flex:1;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:22px;font-size:16px;font-family:inherit;outline:none;transition:border-color .2s}' +
     '.re-input-bar input:focus{border-color:' + PRIMARY + '}' +
@@ -158,19 +274,37 @@
         '<p>' + (agent.firstName || 'Agent') + (agent.title ? ' \u2014 ' + agent.title : '') + '</p>' +
       '</div>' +
       '<div class="re-header-actions">' +
-        '<button class="re-new-chat" id="re-new-chat" aria-label="New conversation" title="New conversation">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>' +
-        '</button>' +
+        '<button class="re-lang-btn re-active" id="re-lang-en" aria-label="English">EN</button>' +
+        '<button class="re-lang-btn" id="re-lang-es" aria-label="Espa\u00f1ol">ES</button>' +
+        '<div class="re-menu-wrap">' +
+          '<button class="re-menu-toggle" id="re-menu-toggle" aria-label="Menu">\u22ee</button>' +
+          '<div class="re-menu-dropdown" id="re-menu-dropdown">' +
+            '<button class="re-menu-item" id="re-menu-new">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>' +
+              '<span>' + T.en.newChat + '</span>' +
+            '</button>' +
+            '<div class="re-menu-sep"></div>' +
+            '<button class="re-menu-item" id="re-menu-refresh">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>' +
+              '<span>' + T.en.refresh + '</span>' +
+            '</button>' +
+            '<div class="re-menu-sep"></div>' +
+            '<button class="re-menu-item" id="re-menu-exit">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+              '<span>' + T.en.exit + '</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
         '<button class="re-chat-close" aria-label="Close chat">&times;</button>' +
       '</div>' +
     '</div>' +
     '<div class="re-chat-body" id="re-chat-body"></div>' +
     '<div class="re-quick-bar" id="re-quick-bar">' +
-      '<button id="re-buy-btn">\ud83c\udfe0 I want to buy</button>' +
-      '<button id="re-sell-btn">\ud83d\udcb0 I want to sell</button>' +
+      '<button id="re-buy-btn">' + T.en.wantBuy + '</button>' +
+      '<button id="re-sell-btn">' + T.en.wantSell + '</button>' +
     '</div>' +
     '<div class="re-input-bar" id="re-input-bar">' +
-      '<input type="text" id="re-chat-input" placeholder="Ask a question..." />' +
+      '<input type="text" id="re-chat-input" placeholder="' + T.en.askQuestion + '" />' +
       '<button id="re-chat-send" aria-label="Send">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
       '</button>' +
@@ -184,11 +318,30 @@
   var quickBar = document.getElementById('re-quick-bar');
   var buyBtn = document.getElementById('re-buy-btn');
   var sellBtn = document.getElementById('re-sell-btn');
-  var newChatBtn = document.getElementById('re-new-chat');
+  var langEnBtn = document.getElementById('re-lang-en');
+  var langEsBtn = document.getElementById('re-lang-es');
+  var menuToggleBtn = document.getElementById('re-menu-toggle');
+  var menuDropdown = document.getElementById('re-menu-dropdown');
+  var menuNewBtn = document.getElementById('re-menu-new');
+  var menuRefreshBtn = document.getElementById('re-menu-refresh');
+  var menuExitBtn = document.getElementById('re-menu-exit');
 
   function setQuickBarVisible(visible) {
     if (visible) { quickBar.classList.remove('re-hidden'); }
     else { quickBar.classList.add('re-hidden'); }
+  }
+
+  /** Update all translatable text in the static DOM */
+  function applyLangUI() {
+    buyBtn.textContent = t('wantBuy');
+    sellBtn.textContent = t('wantSell');
+    chatInput.placeholder = t('askQuestion');
+    menuNewBtn.querySelector('span').textContent = t('newChat');
+    menuRefreshBtn.querySelector('span').textContent = t('refresh');
+    menuExitBtn.querySelector('span').textContent = t('exit');
+    // Toggle active lang button
+    langEnBtn.classList.toggle('re-active', state.lang === 'en');
+    langEsBtn.classList.toggle('re-active', state.lang === 'es');
   }
 
   /* ── Mobile helpers ─────────────────────────────── */
@@ -223,6 +376,7 @@
   function closeChat() {
     state.open = false;
     win.classList.remove('re-open');
+    closeMenu();
     unlockBodyScroll();
   }
 
@@ -234,7 +388,47 @@
 
   buyBtn.addEventListener('click', function () { handleTypeSelection('buyer'); });
   sellBtn.addEventListener('click', function () { handleTypeSelection('seller'); });
-  newChatBtn.addEventListener('click', resetChat);
+
+  /* ── Language toggle ─────────────────────────────── */
+  function switchLang(newLang) {
+    if (newLang === state.lang) return;
+    state.lang = newLang;
+    resetChat();
+  }
+
+  langEnBtn.addEventListener('click', function () { switchLang('en'); });
+  langEsBtn.addEventListener('click', function () { switchLang('es'); });
+
+  /* ── Ellipsis menu ───────────────────────────────── */
+  function closeMenu() { menuDropdown.classList.remove('re-menu-open'); }
+  function toggleMenu() { menuDropdown.classList.toggle('re-menu-open'); }
+
+  menuToggleBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  menuNewBtn.addEventListener('click', function () {
+    closeMenu();
+    resetChat();
+  });
+
+  menuRefreshBtn.addEventListener('click', function () {
+    closeMenu();
+    resetChat();
+  });
+
+  menuExitBtn.addEventListener('click', function () {
+    closeMenu();
+    closeChat();
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!menuDropdown.contains(e.target) && e.target !== menuToggleBtn) {
+      closeMenu();
+    }
+  });
 
   function handleSend() {
     var text = chatInput.value.trim();
@@ -253,11 +447,13 @@
   function startConversation() {
     state.mode = 'chat';
     setQuickBarVisible(true);
-    showBotMessage(brand.welcomeMessage || "Hi! How can I help you today?");
+    var welcomeKey = state.lang === 'es' ? 'welcomeMessage_es' : 'welcomeMessage';
+    var welcomeText = brand[welcomeKey] || brand.welcomeMessage || "Hi! How can I help you today?";
+    showBotMessage(welcomeText);
   }
 
   function handleTypeSelection(value) {
-    var labels = { buyer: "I want to buy", seller: "I want to sell" };
+    var labels = { buyer: t('wantBuy'), seller: t('wantSell') };
     addUserMessage(labels[value] || value);
     state.userType = value;
     state.questionIndex = 0;
@@ -265,23 +461,21 @@
     state.mode = 'guided';
     setQuickBarVisible(false);
 
-    var resp = {
-      buyer: "Great! I'd love to help you find the perfect property. Let me ask a few quick questions so " + (agent.firstName || 'the agent') + " can prepare the best options for you.",
-      seller: "Wonderful! Let's get some details so " + (agent.firstName || 'the agent') + " can give you an accurate market assessment."
-    };
+    var agentName = agent.firstName || 'the agent';
+    var introFn = value === 'buyer' ? m('buyerIntro') : m('sellerIntro');
     setTimeout(function () {
-      showBotMessage(resp[value], function () {
+      showBotMessage(introFn(agentName), function () {
         setTimeout(function () { askNextQuestion(); }, 400);
       });
     }, 500);
   }
 
   function askNextQuestion() {
-    var qs = questions[state.userType] || [];
+    var qs = getQuestions()[state.userType] || [];
     if (state.questionIndex >= qs.length) {
       setTimeout(function () {
         showBotMessage(
-          "Thanks for those details! To connect you with " + (agent.firstName || 'our agent') + ", I'll just need your contact info.",
+          m('contactInfo')(agent.firstName || 'our agent'),
           function () { setTimeout(function () { showLeadForm(); }, 500); }
         );
       }, 400);
@@ -310,9 +504,9 @@
     var form = document.createElement('div');
     form.className = 're-form';
     var fields = leadCapture.fields || ['name', 'phone', 'email'];
-    var fl = { name: 'Your name', phone: 'Phone number', email: 'Email address' };
+    var fl = { name: t('yourName'), phone: t('phoneNumber'), email: t('emailAddress') };
     var ft = { name: 'text', phone: 'tel', email: 'email' };
-    var fp = { name: 'John Smith', phone: '(403) 555-1234', email: 'john@example.com' };
+    var fp = { name: t('namePlaceholder'), phone: t('phonePlaceholder'), email: t('emailPlaceholder') };
 
     fields.forEach(function (f) {
       var label = document.createElement('label');
@@ -328,7 +522,7 @@
 
     var btn = document.createElement('button');
     btn.className = 're-form-submit';
-    btn.textContent = 'Continue to Book a Consultation';
+    btn.textContent = t('bookConsultation');
     btn.addEventListener('click', function () {
       var valid = true;
       fields.forEach(function (f) {
@@ -345,11 +539,9 @@
       form.remove();
       addUserMessage(state.lead.name + ' | ' + state.lead.phone + ' | ' + state.lead.email);
       setTimeout(function () {
-        var tl = { buyer: 'buying', seller: 'selling' };
+        var tl = { buyer: t('buyerType'), seller: t('sellerType') };
         showBotMessage(
-          "Perfect, " + state.lead.name.split(' ')[0] + "! Based on your " + (tl[state.userType] || '') +
-          " needs, I'd recommend booking a consultation with " + (agent.firstName || 'our agent') +
-          ". Pick a time that works for you:",
+          m('bookingMsg')(state.lead.name.split(' ')[0], agent.firstName || 'our agent', tl[state.userType] || ''),
           function () { setTimeout(function () { showCalendarBooking(); }, 300); }
         );
       }, 400);
@@ -378,7 +570,7 @@
           '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
           '<line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>' +
           '<line x1="3" y1="10" x2="21" y2="10"/>' +
-        '</svg> Book Your Consultation';
+        '</svg> ' + t('bookYourConsultation');
       btn.addEventListener('click', function () {
         Cal('modal', {
           calLink: calLink,
@@ -405,7 +597,7 @@
     } else {
       var msg = document.createElement('div');
       msg.className = 're-msg re-msg-bot';
-      msg.textContent = 'Please email ' + (agent.email || 'us') + ' to schedule your consultation.';
+      msg.textContent = m('emailFallback')(agent.email || 'us');
       container.appendChild(msg);
     }
 
@@ -415,17 +607,14 @@
 
   /* ── Booking complete ────────────────────────────── */
   function handleBookingComplete() {
-    addUserMessage("I've booked my consultation!");
+    addUserMessage(t('bookedMsg'));
     state.mode = 'chat';
     setQuickBarVisible(true);
     if (sms.enabled && sms.backendUrl) sendSmsNotifications();
     setTimeout(function () {
-      var tl = { buyer: 'property search', seller: 'listing consultation' };
+      var tl = { buyer: t('propertySearch'), seller: t('listingConsult') };
       showBotMessage(
-        "You're all set, " + state.lead.name.split(' ')[0] + "! " +
-        (agent.firstName || 'Our agent') + " is looking forward to helping with your " +
-        (tl[state.userType] || 'real estate needs') +
-        ". You'll receive a confirmation shortly. Feel free to ask me anything else!",
+        m('bookingDone')(state.lead.name.split(' ')[0], agent.firstName || 'Our agent', tl[state.userType] || ''),
         function () {
           setTimeout(function () {
             var summary = document.createElement('div');
@@ -434,14 +623,14 @@
             summary.style.border = '1px solid #e8e8e8';
             summary.style.fontSize = '12px';
             summary.innerHTML =
-              '<strong>Consultation Summary</strong><br>' +
-              'Client: ' + state.lead.name + '<br>' +
-              'Type: ' + state.userType.charAt(0).toUpperCase() + state.userType.slice(1) + '<br>' +
+              '<strong>' + t('consultSummary') + '</strong><br>' +
+              t('client') + ': ' + state.lead.name + '<br>' +
+              t('type') + ': ' + (state.userType === 'buyer' ? t('buyerLabel') : t('sellerLabel')) + '<br>' +
               Object.keys(state.answers).filter(function (k) { return k !== 'type'; }).map(function (k) {
                 return k.replace(/_/g, ' ').replace(/\b\w/g, function (l) { return l.toUpperCase(); }) + ': ' + state.answers[k];
               }).join('<br>') +
-              '<br>Phone: ' + state.lead.phone +
-              '<br>Email: ' + state.lead.email;
+              '<br>' + t('phone') + ': ' + state.lead.phone +
+              '<br>' + t('email') + ': ' + state.lead.email;
             body.appendChild(summary);
             scrollToBottom();
           }, 600);
@@ -475,14 +664,14 @@
     fetch(API_BASE + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: state.chatHistory, context: ctx })
+      body: JSON.stringify({ messages: state.chatHistory, context: ctx, lang: state.lang })
     })
     .then(function (res) { return res.json(); })
     .then(function (data) {
       var el = document.getElementById('re-ai-typing');
       if (el) el.remove();
 
-      var text = data.message || "I'm sorry, something went wrong. Please try again.";
+      var text = data.message || t('errorGeneric');
       state.chatHistory.push({ role: 'assistant', content: text });
 
       var msg = document.createElement('div');
@@ -501,7 +690,7 @@
 
       var msg = document.createElement('div');
       msg.className = 're-msg re-msg-bot';
-      msg.textContent = "I'm having trouble connecting right now. Please try again in a moment.";
+      msg.textContent = t('errorConnect');
       body.appendChild(msg);
       scrollToBottom();
 
@@ -518,7 +707,7 @@
 
   /* ── SMS ──────────────────────────────────────────── */
   function sendSmsNotifications() {
-    var tl = { buyer: 'Buyer', seller: 'Seller' };
+    var tl = { buyer: t('buyerLabel'), seller: t('sellerLabel') };
     var details = Object.keys(state.answers).filter(function (k) { return k !== 'type'; })
       .map(function (k) { return k.replace(/_/g, ' ') + ': ' + state.answers[k]; }).join(', ');
     sendSms(agent.phone, 'New ' + tl[state.userType] + ' lead! ' + state.lead.name + ' (' + state.lead.phone + '). ' + details + '. Consultation booked.');
@@ -577,7 +766,7 @@
     if (multiSelect) {
       var hint = document.createElement('div');
       hint.className = 're-multi-hint';
-      hint.textContent = 'Select up to 2 options';
+      hint.textContent = t('selectUpTo2');
       body.appendChild(hint);
 
       options.forEach(function (opt) {
@@ -604,7 +793,7 @@
         customContainer.className = 're-custom-input';
         var input = document.createElement('input');
         input.type = 'text';
-        input.placeholder = 'Or type your own...';
+        input.placeholder = t('typeOwn');
         var sendBtn = document.createElement('button');
         sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
         var addCustom = function () {
@@ -642,7 +831,7 @@
 
       confirmBtn = document.createElement('button');
       confirmBtn.className = 're-multi-confirm';
-      confirmBtn.textContent = 'Continue \u2192';
+      confirmBtn.textContent = t('continueBtn');
       confirmBtn.disabled = true;
       confirmBtn.addEventListener('click', function () {
         if (selected.length === 0) return;
@@ -672,7 +861,7 @@
         customContainer.className = 're-custom-input';
         var input2 = document.createElement('input');
         input2.type = 'text';
-        input2.placeholder = 'Or type your own...';
+        input2.placeholder = t('typeOwn');
         var sendBtn2 = document.createElement('button');
         sendBtn2.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
         var submitCustom = function () {
@@ -709,12 +898,15 @@
   }
 
   function resetChat() {
+    var currentLang = state.lang;
     state = {
-      open: true, mode: 'chat', userType: '', answers: {},
+      open: true, lang: currentLang, mode: 'chat', userType: '', answers: {},
       questionIndex: 0, lead: { name: '', phone: '', email: '' },
       messages: [], chatHistory: [], awaitingAI: false
     };
+    lastUserMsg = null;
     body.innerHTML = '';
+    applyLangUI();
     setQuickBarVisible(true);
     startConversation();
   }

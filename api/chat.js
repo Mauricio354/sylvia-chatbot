@@ -64,7 +64,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages, context } = req.body;
+    const { messages, context, lang } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Messages array is required" });
@@ -80,13 +80,18 @@ export default async function handler(req, res) {
       }
     }
 
+    // Language instruction
+    const LANG_MAP = { en: "English", es: "Spanish" };
+    const resolvedLang = LANG_MAP[lang] || "English";
+    const langInstruction = `\n\n## Language Instructions (CRITICAL — MUST FOLLOW)\n- RESPONSE LANGUAGE: ${resolvedLang}\n- You MUST respond ONLY in ${resolvedLang}, no exceptions.\n- Even if the user writes in a different language, you MUST still respond in ${resolvedLang}.`;
+
     // Limit conversation history to last 20 messages to manage token usage
     const recentMessages = messages.slice(-20);
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
-      system: SYSTEM_PROMPT + dynamicContext,
+      system: SYSTEM_PROMPT + dynamicContext + langInstruction,
       messages: recentMessages,
     });
 
