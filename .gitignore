@@ -1,3 +1,6 @@
 .vercel
 node_modules
 .env
+
+# Per-user Claude Code state
+.claude/settings.local.json
