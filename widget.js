@@ -958,4 +958,21 @@
     if (i === 'agent') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
   }
+
+  /* ── Early preload: warm Cal.com availability on page load ─────
+     Fires after idle so it doesn't compete with critical rendering.
+     Gives Cal.com 60-120s to fetch Apple Calendar availability before
+     the user reaches the booking step. */
+  var schedulePreload = function () {
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(preloadCal, { timeout: 3000 });
+    } else {
+      setTimeout(preloadCal, 1500);
+    }
+  };
+  if (document.readyState === 'complete') {
+    schedulePreload();
+  } else {
+    window.addEventListener('load', schedulePreload);
+  }
 })();
