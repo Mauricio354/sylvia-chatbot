@@ -86,7 +86,9 @@
       propertySearch: 'property search',
       listingConsult: 'listing consultation',
       buyerLabel: 'Buyer',
-      sellerLabel: 'Seller'
+      sellerLabel: 'Seller',
+      loadingCalendar: "Loading Sylvia's availability…",
+      calendarHint: 'The calendar takes a few seconds to load — thanks for your patience!'
     },
     es: {
       wantBuy: '\ud83c\udfe0 Quiero comprar',
@@ -119,7 +121,9 @@
       propertySearch: 'b\u00fasqueda de propiedad',
       listingConsult: 'consulta de venta',
       buyerLabel: 'Comprador',
-      sellerLabel: 'Vendedor'
+      sellerLabel: 'Vendedor',
+      loadingCalendar: 'Cargando la disponibilidad de Sylvia…',
+      calendarHint: 'El calendario tarda unos segundos en cargar — \u00a1gracias por tu paciencia!'
     }
   };
 
@@ -215,6 +219,11 @@
     '.re-calendar-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:' + PRIMARY + ';color:#fff;border:none;border-radius:24px;padding:12px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .2s}' +
     '.re-calendar-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}' +
     '.re-calendar-btn svg{width:18px;height:18px}' +
+    '.re-calendar-btn-loading{opacity:.85;cursor:wait}' +
+    '.re-calendar-btn-loading:hover{transform:none}' +
+    '.re-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:re-spin .7s linear infinite}' +
+    '@keyframes re-spin{to{transform:rotate(360deg)}}' +
+    '.re-calendar-hint{font-size:11.5px;color:#6b7280;text-align:center;padding:0 8px;font-style:italic;line-height:1.4}' +
     '.re-quick-bar{display:flex;gap:6px;padding:8px 14px;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fafafa}' +
     '.re-quick-bar button{flex:1;background:#fff;color:' + PRIMARY + ';border:1.5px solid ' + PRIMARY + ';border-radius:20px;padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease}' +
     '.re-quick-bar button:hover{background:' + PRIMARY + ';color:#fff}' +
@@ -452,6 +461,19 @@
     showBotMessage(welcomeText);
   }
 
+  /* ── Cal.com preload (warms up availability while user answers questions) ── */
+  var calPreloaded = false;
+  function preloadCal() {
+    if (calPreloaded) return;
+    var calcomUrl = calendar.calcomUrl || '';
+    var calLink = calcomUrl.replace(/^https?:\/\/cal\.com\//, '');
+    if (!calLink) return;
+    try {
+      Cal('preload', { calLink: calLink });
+      calPreloaded = true;
+    } catch (e) {}
+  }
+
   function handleTypeSelection(value) {
     var labels = { buyer: t('wantBuy'), seller: t('wantSell') };
     addUserMessage(labels[value] || value);
@@ -460,6 +482,7 @@
     state.answers = { type: value };
     state.mode = 'guided';
     setQuickBarVisible(false);
+    preloadCal();
 
     var agentName = agent.firstName || 'the agent';
     var introFn = value === 'buyer' ? m('buyerIntro') : m('sellerIntro');
@@ -563,15 +586,22 @@
     var calLink = calcomUrl.replace(/^https?:\/\/cal\.com\//, '');
 
     if (calLink) {
+      preloadCal();
+
       var btn = document.createElement('button');
       btn.className = 're-calendar-btn';
-      btn.innerHTML =
+      var defaultBtnHTML =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
           '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
           '<line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>' +
           '<line x1="3" y1="10" x2="21" y2="10"/>' +
         '</svg> ' + t('bookYourConsultation');
+      btn.innerHTML = defaultBtnHTML;
       btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.classList.add('re-calendar-btn-loading');
+        btn.innerHTML = '<span class="re-spinner"></span> ' + t('loadingCalendar');
+
         Cal('modal', {
           calLink: calLink,
           config: {
@@ -580,8 +610,19 @@
             layout: 'month_view'
           }
         });
+
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.classList.remove('re-calendar-btn-loading');
+          btn.innerHTML = defaultBtnHTML;
+        }, 2500);
       });
       container.appendChild(btn);
+
+      var hint = document.createElement('div');
+      hint.className = 're-calendar-hint';
+      hint.textContent = t('calendarHint');
+      container.appendChild(hint);
 
       if (!bookingListenerSet) {
         bookingListenerSet = true;
